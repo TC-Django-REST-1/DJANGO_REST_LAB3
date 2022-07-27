@@ -1,17 +1,11 @@
-import re
-from urllib import request, response
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.request import Request
-
-import students
 from .models import Student #استدعاء الكلاس اللي داخل المودل
 
 
 @api_view(["POST"])
 def add_new_stu(request : Request):
-
-
     try:
         fname    = request.data["first_name"] 
         lname    = request.data["last_name"]
@@ -37,7 +31,7 @@ def add_new_stu(request : Request):
     
     
 @api_view(['GET'])
-def display_students(request : request):
+def display_students(request : Request):
     
     all_student   = Student.objects.all()
     list_students = [{"id"         : student.id,
@@ -49,14 +43,13 @@ def display_students(request : request):
     
     res_data = {
         "msg" : "Display all students",
-        "books" : list_students
+        "students" : list_students
     }
-
     return Response(res_data)
 
 
 @api_view(['PUT'])
-def upadate_info_student(request : request, stu_id):
+def upadate_info_student(request : Request, stu_id):
         fname    = request.data["first_name"] 
         lname    = request.data["last_name"]
         birthday = request.data["birthday"]
@@ -78,7 +71,7 @@ def upadate_info_student(request : request, stu_id):
 
 
 @api_view(['DELETE'])
-def delete_student(request : request, stu_id):
+def delete_student(request : Request, stu_id):
     try:
         student = Student.objects.get(id = stu_id)
         student.delete()
