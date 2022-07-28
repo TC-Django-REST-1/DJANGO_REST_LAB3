@@ -8,7 +8,7 @@ from .models import Students
 def students_list(request: Request):
     all_students = Students.objects.all()
     
-    all_students_list = [{ "f_name": all_students.first_name, 'l_name': all_students.last_name, 'birth': all_students.birth_date, 'gpa': all_students.GPA} for student in all_students]
+    all_students_list = [{ "f_name": student.first_name, 'l_name': student.last_name, 'birth': student.birth_date, 'gpa': student.GPA} for student in all_students]
 
     response_data = {
         'msg': 'Student Information List',
