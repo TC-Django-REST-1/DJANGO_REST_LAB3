@@ -1,7 +1,9 @@
+from unicodedata import name
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 from .models import Students
+from rest_framework import status
 
 # Create your views here.
 @api_view(["POST"])
@@ -21,22 +23,32 @@ def add_student(request : Request):
     }
         
     
-    return Response(res_data)
+    return Response(res_data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
 def list_students(request : Request):
 
-    all_students = Students.objects.all()
+    skip = int(request.query_params.get('skip',0))
+    get = int(request.query_params.get('get', 2))
 
-    list_all = [{"id": student.id, "full name" : student.first_name + " " + student.last_name , "Birth_date" : student.birth_date, "GPA" : student.GPA }
-     for student in all_students]  # This step to convert model data to json data and get it at rest_api
+    all_students_with_high_GPA = Students.objects.all().count()
+    #print(all_students_with_high_GPA)
+
+    if 'search' in request.query_params:
+        search_phrase = request.query_params['search']
+        all_students = Students.objects.filter(first_name__contains=search_phrase)[skip:get]
+    else:
+       all_students = Students.objects.all().order_by('GPA')[skip:get]
+
+    list_all = [{"id": student.id, "full name" : student.first_name + " " + student.last_name , "GPA" : student.GPA } for student in all_students] 
+     # This step to convert model data to json data and get it at rest_api
 
     res_data = {
         'msg' : 'list all students',
         'students' : list_all
     }
-
+    
     return Response(res_data)
 
 
@@ -74,19 +86,17 @@ def update_student(request : Request, student_id):
 @api_view(["DELETE"])
 def delete_student(request : Request, student_id):
 
-    # get student with id to delete it
-    student = Students.objects.get(id=student_id)
     
     
-    # get info of student will be delete it
-    student_deleted = {'id': student.id, 'name': student.first_name + ' ' + student.last_name, 'birthDate' : student.birth_date} 
+    try:
+        # get student with id to delete it
+        student = Students.objects.get(id=student_id)
+        # get info of student will be delete it
+        student_deleted = {'id': student.id, 'name': student.first_name + ' ' + student.last_name, 'birthDate' : student.birth_date} 
+        # then delete this student
+        student.delete()
+    except Exception as ex:
+        return Response({'msg' : 'The student Not Found!'})
 
-    # then delete this student
-    student.delete()
-
-    res_data = {
-        'msg' : 'student with id ({student_id}) deleted successfully!',
-        'student deleted' : student_deleted
-    }
-
-    return Response(res_data)
+    return Response({'msg' : 'student with id ({student_id}) deleted successfully!',
+        'student deleted' : student_deleted})
